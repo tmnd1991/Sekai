@@ -1,7 +1,7 @@
 package it.murgia.antonio.sekai.test.test
 
 import it.murgia.antonio.sekai.base.Message
-import it.murgia.antonio.sekai.base.impl.BasicEnvironment
+import it.murgia.antonio.sekai.base.Environments.impl.BasicEnvironment
 import it.murgia.antonio.sekai.test.impl.{EchoActiveThing, EchoInterceptor}
 
 /**
