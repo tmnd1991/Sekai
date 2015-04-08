@@ -29,6 +29,7 @@ class BasicEnvironment extends Environment {
     rec.filter(_.canReceiveMessage(from,message) == YES).headOption match{
       case Some(x : ActiveThing[I,_]) => x.receiveMessage(from,message)
       case None => throw new NoValidRecipientException()
+      case _ => throw new Exception("This can't happen")
     }
   }
 
@@ -66,6 +67,7 @@ class BasicEnvironment extends Environment {
                .headOption match{
                   case Some(x : ActiveThing[I,O]) => x.receiveMessage(from,message)
                   case None => throw new NoValidRecipientException()
+                  case _ => throw new Exception("This can't happen")
                }
   }
 
@@ -89,10 +91,12 @@ class BasicEnvironment extends Environment {
   override def signalFirstWithResponse[I, O](from: String, message: Message[I])(implicit tagI: TypeTag[I], tagO: TypeTag[O]): O = {
     val rec = activeThings.filter(x => x.inputType  =:= tagI.tpe).map(_.asInstanceOf[ActiveThing[I,_]])
     rec.filter(_.canReceiveMessage(from,message) == DONTCONSUME).foreach(_.receiveMessage(from,message))
-    rec.filter(x => x.outputType =:= tagO.tpe &&
-                    x.canReceiveMessage(from,message) == YES).headOption match{
+    val receivers = rec.filter(x => x.outputType =:= tagO.tpe &&
+                               x.canReceiveMessage(from,message) == YES)
+    receivers.headOption match{
       case Some(x : ActiveThing[I,O]) => x.receiveMessage(from,message)
-      case None => throw new NoValidRecipientException()
+      case None => throw new NoValidRecipientException(message.subject)
+      case _ => throw new Exception("This can't happen")
     }
   }
 
@@ -104,8 +108,9 @@ class BasicEnvironment extends Environment {
     activeThings.filter(x => x.inputType  =:= tagI.tpe)
                 .map(_.asInstanceOf[ActiveThing[I,_]])
                 .foreach(x => x.canReceiveMessage(from,message) match{
-                                case YES => List(x.receiveMessage(from,message))
+                                case YES => x.receiveMessage(from,message)
                                 case DONTCONSUME => x.receiveMessage(from,message)
+                                case _ => Unit
                               }
                 )
   }
